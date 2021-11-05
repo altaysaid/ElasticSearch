@@ -1,0 +1,1559 @@
+Elastic Search & Kibana Document
+
+## https://github.com/codingexplained/complete-guide-to-elasticsearch
+
+GET /.kibana/_search
+{
+  "query": {
+    "match_all": {}
+  }
+}
+
+GET /_cat/nodes?v
+
+GET /_cat/indices?v
+
+GET /_cluster/health
+
+PUT /pages
+
+GET /_cat/shards?v
+
+
+DELETE /products
+
+PUT /products
+{
+  "settings":{
+    "number_of_shards": 1,
+    "number_of_replicas": 2
+  }
+}
+
+
+POST /products/_doc
+{
+  "name": "Coffee Maker",
+  "price": 64,
+  "in_stock":10
+}
+
+GET /products/_mapping
+
+PUT /products/_doc/100
+{
+  "name": "Toaster",
+  "price": 49,
+  "in_stock": 4
+}
+
+GET /products/_doc/100
+
+POST /products/_update/100
+{
+  "doc":{
+    "name": "Updated Toaster"
+  }
+}
+
+POST /products/_update/100
+{
+  "doc":{
+    "tags": ["electronics"]
+  }
+}
+
+POST /products/_update/100
+{
+  "script": {
+    "source": "ctx._source.in_stock--"
+  }
+}
+
+
+POST /products/_update/100
+{
+  "script": {
+    "source": "ctx._source.in_stock=10"
+  }
+}
+
+POST /products/_update/100
+{
+  "script": {
+    "source": "ctx._source.in_stock-= params.quantity",
+    "params": {
+      "quantity": 4
+    }
+  }
+}
+
+
+GET /products/_doc/100
+
+POST /products/_update/101
+{
+  "script": {
+    "source": "ctx._source.in_stock++"
+  },
+  "upsert": {
+    "name": "Upsert Product",
+    "price": 69,
+    "in_stock": 4
+  }
+}
+
+GET /products/_doc/101
+
+DELETE /products/_doc/101
+
+
+GET /products
+
+POST /products/_doc/100?if_primary_term=1&if_seq_no=5
+{
+  "doc": {
+    "in_stock": "321"
+  }
+}
+
+#34 lecture
+POST /products/_update_by_query
+{
+  "conflicts": "proceed", 
+  "script": {
+    "source": "if(ctx._source.in_stock != null) {ctx._source.in_stock++}"
+  },
+  "query": {
+    "match_all": {}
+  }
+}
+
+GET /products/_search
+
+POST /products/_delete_by_query
+{
+  "query":{
+    "match_all":{
+      
+    }
+  }
+}
+
+#36 LEcture
+
+POST /_bulk
+{ "index":{"_index":"products", "_id":200 } }
+{ "name":"Espresso Machine", "price":201,"in_stock":888 }
+{ "create":{"_index":"products", "_id":201 } }
+{ "name":"Espresso Machine 2", "price":1000,"in_stock":444 }
+
+
+POST /products/_bulk
+{ "update":{"_id":201 } }
+{ "doc": {"price": 123}}
+{ "delete":{"_id":200 } }
+
+
+
+#Lecture 41
+
+POST /_analyze
+{
+  "text": "Hello World",
+  "analyzer": "standard"
+}
+
+POST /_analyze
+{
+  "text": "Hello World",
+  "char_filter": [],
+  "tokenizer": "standard",
+  "filter": ["lowercase"]
+}
+
+
+
+
+#Lecture 46
+
+PUT /coercion_test/_doc/1
+{
+  "price" : 7.4
+}
+
+GET /coercion_test/_doc/2 
+
+PUT /coercion_test/_doc/2
+{
+  "price" : "7.4"
+}
+
+
+PUT /coercion_test/_doc/3
+{
+  "price" : "7.4m"
+}
+
+#Lecture 47
+
+DELETE /reviews
+PUT /reviews
+{
+  "mappings": {
+    "properties": {
+      "rating": {"type": "float"},
+      "content": {"type": "text"},
+      "product_id": {"type": "integer"},
+      "author": {
+        "properties": {
+          "first name": {"type": "text"},
+          "last_name": {"type": "text"},
+          "email": {"type": "keyword"}
+          
+        }
+      }
+      
+    }
+  }
+}
+
+
+PUT /reviews/_doc/1
+{
+  "rating": 5.0,
+  "content": "Great advice, thank you.!",
+  "product_id": 123,
+  "author": {
+    "first name": "Slavica",
+    "last_name": "Makarovska",
+    "email": "cacilini@makarovska.com"
+    
+  }
+}
+
+#Lecture 49
+GET /reviews/_mapping
+
+GET /reviews/_mapping/field/content
+
+GET /reviews/_mapping/field/author.email
+
+
+# lEcture 50
+PUT /reviews_dot_notation
+{
+  "mappings": {
+    "properties": {
+      "rating": {"type": "float"},
+      "content": {"type": "text"},
+      "product_id": {"type": "integer"},
+      "author.first name": {"type": "text"},
+      "author.last_name": {"type": "text"},
+      "author.email": {"type": "keyword"}
+    }
+  }
+}
+
+GET /reviews_dot_notation/_mapping
+
+PUT /reviews/_mapping
+{
+  "properties":{
+    "created_at":{
+      "type":"date"
+    }
+  }
+}
+
+PUT /reviews/_doc/2
+{
+  "rating": 4.5,
+  "content": "more than great..",
+  "product_id": 123,
+  "created_at":"2015-04-15T13:07:41Z",
+  "author": {
+    "first name": "Igor",
+    "last_name": "Ginoski",
+    "email": "biolog@capari.com"
+  }
+}
+
+PUT /reviews/_doc/3
+{
+  "rating": 4.5,
+  "content": "more than great..",
+  "product_id": 234,
+  "created_at":"2015-04-15T13:07:41+01:00",
+  "author": {
+    "first name": "Krusa",
+    "last_name": "Ginoski",
+    "email": "krusograv@capari.com"
+  }
+}
+
+PUT /reviews/_doc/3
+{
+  "rating": 4,
+  "content": "efficient..",
+  "product_id": 234,
+  "created_at":1436011284000,
+  "author": {
+    "first name": "Marce",
+    "last_name": "Precizen",
+    "email": "dj@capari.com"
+  }
+}
+
+
+GET /reviews/_search
+{
+  "query": {
+    "match_all": {}
+  }
+}
+
+#Lecture 55
+GET /reviews/_mapping
+
+#This can not be done
+PUT /reviews/_mapping
+{
+  "properties":{
+    "content":{
+      "type": "keyword"
+    }
+    
+  }
+}
+
+PUT /reviews/_mapping
+{
+  "properties":{
+    "author":{
+      "properties":{
+        "first name":{
+          "type": "keyword",
+          "ignore_above":256
+        }
+      }
+    }
+    
+  }
+}
+
+#Lecture 56
+
+PUT /reviews_new
+{
+  "mappings" : {
+    "properties" : {
+      "author" : {
+        "properties" : {
+          "email" : {
+            "type" : "keyword"
+          },
+          "first name" : {
+            "type" : "text"
+          },
+          "last_name" : {
+            "type" : "text"
+          }
+        }
+      },
+      "content" : {
+        "type" : "text"
+      },
+      "created_at" : {
+        "type" : "date"
+      },
+      "product_id" : {
+        "type" : "keyword"
+      },
+      "rating" : {
+        "type" : "float"
+      }
+    }
+  }
+}
+
+POST /_reindex
+{
+  "source": {
+    "index": "reviews"
+  },
+  "dest": {
+    "index": "reviews_new"
+  }
+}
+
+GET /reviews_new/_search
+{
+  "query": {
+    "match_all": {}
+  }
+}
+
+POST /_reindex
+{
+  "source": {
+    "index": "reviews"
+  },
+  "dest": {
+    "index": "reviews_new"
+  },
+  "script": {
+    "source": """
+      if (ctx._source.product_id != null) {
+        ctx._source.product_id=ctx._source.product_id.toString();
+      }
+      """
+  }
+}
+
+POST /_reindex
+{
+  "source": {
+    "index": "reviews",
+    "query": {
+      "range":{
+        "rating":{
+          "gt": 4
+        }
+      }
+    }
+  },
+  "dest": {
+    "index": "reviews_new"
+  }
+}
+
+#removing fields
+POST /_reindex
+{
+  "source": {
+    "index": "reviews",
+    "_source":["content","created_at","rating"]
+  },
+  "dest": {
+    "index": "reviews_new"
+  }
+}
+
+#Throttling for putting max capacity when deploying to production
+
+
+#Lecture 57
+
+PUT /reviews/_mapping
+{
+  "properties":{
+    "comment":{
+      "type": "alias",
+      "path": "content"
+    }
+  }
+}
+
+GET /reviews/_search
+{
+  "query": {
+    "match": {
+      "content": "great"
+    }
+  }
+}
+ 
+GET /reviews/_search
+{
+  "query": {
+    "match": {
+      "comment": "great"
+      
+    }
+  }
+}
+
+#Lecture 58
+PUT /multi_field
+{
+  "mappings": { 
+    "properties":{
+      "description":{
+        "type": "text"
+      },
+      "ingredients":{
+        "type": "text",
+        "fields":{
+          "keyword":{
+            "type": "keyword"
+          }
+        }
+      }
+    }
+  }
+}
+
+POST /multi_field/_doc
+{
+  "description":"To make this spaghetti carbonara, you first need to...",
+  "ingredients":["Spaghetti","Bacon","Eggs"]
+}
+
+
+GET /multi_field/_search
+{
+  "query": {
+    "match": {
+      "ingredients": "spagheTTi"
+    }
+  }
+}
+
+GET /multi_field/_search
+{
+  "query": {
+    "term": {
+      "ingredients.keyword": "Spaghetti"
+    }
+  }
+}
+
+DELETE /multi_field
+
+#59 Templates
+PUT /_template/access-logs
+{
+  "index_patterns": ["access-logs-*"],
+  "settings": {
+    "number_of_shards": 2,
+    "index.mapping.coerce":false
+  }, 
+  "mappings": {
+    "properties": {
+      "@timestamp":{
+        "type": "date"
+      },
+      "url.original":{
+        "type": "keyword"
+      },
+      "http.request.referrer":{
+        "type": "keyword"
+      },
+      "http.response.status_code":{
+        "type": "long"
+      }
+    }
+  }
+}
+
+PUT /access-logs-2020-01-01
+
+GET  /access-logs-2020-01-01
+
+GET /products/_mapping
+
+#Lecture62
+
+PUT /people
+{
+  "mappings": {
+    "dynamic":"strict", 
+    "properties": {
+      "first_name":{
+        "type": "text"
+      }
+    }
+  }
+}
+
+GET /people/_search
+POST /people/_doc
+{
+  "first_name":"Caci",
+  "last_name":"Makarovska"
+}
+
+GET /people/_mapping
+
+DELETE /people
+
+#Lecture64
+
+PUT /dynamic_template_test
+{
+  "mappings": {
+    "dynamic_templates":[
+      {
+        "integers":{
+          "match_mapping_type":"long",
+          "match":42,
+          "match_pattern":"regex",
+          "path_match":"*",
+          "mapping":{
+            "type": "{dynamic_type}"
+          }
+        }
+      }
+    ]
+  }
+}
+
+POST /dunamic_template_test/_doc
+{
+  "in_stock":123
+}
+
+GET /dunamic_template_test/_mapping
+
+
+POST /dynamic_template_test/_doc
+{
+  "in_stock":456
+}
+
+
+GET /dynamic_template_test/_search
+GET /dynamic_template_test/_mapping
+
+#Lecture 75
+GET /dynamic_template_test/_doc/_search?q=in_stock:456%20and%20in_stock:456
+
+#%20 is used for space indicator when doing a curl from the cmd
+
+#Lecture 76 Query DSL
+
+GET /multi_field/_search
+{
+  "query": {
+    "match": {
+      "ingredients": "spagheTTi"
+    }
+  }
+}
+ 
+GET /products/_search?q=price:152
+
+#LEcture 79 Relevance Score
+# Term frequency (TF) / Inverse Document Frequency(how often does this word appear within the index i.e. the more it appears the lesser is the importance )
+# Field-length norm  (How much is he term in relevance to the full body)
+# These are stored at the index time
+
+#Newly BM25 algorith (Better at handling stop words)
+# This is solved via Nonlinear Term Frequency Saturation (logaritmic scale implemented, to flatten out when the frequency is really high)
+# 
+
+
+GET /products/_search
+{
+  "explain": true, 
+  "query": {
+    "term": {
+      "name": "lobster"
+    }
+  }
+}
+
+#Query context vs filter context (Query takes into account relevance score, and filter context doesn't)
+
+#Term level queries search for exact matches , where match query goes through the same analyzer that has been put in place for the index 
+
+GET /products/_search
+{
+  "query": {
+    "term": {
+      "name": "lobster"
+    }
+  }
+}
+GET /products/_search
+{
+  "query": {
+    "term": {
+      "name": "Lobster"
+    }
+  }
+}
+
+GET /products/_search
+{
+  "query": {
+    "match": {
+      "name": "lobster"
+    }
+  }
+}
+
+#Lecture 85
+
+GET /products/_search
+{
+  "query": {
+    "terms": {
+      "tags.keyword": [
+        "Soup",
+        "Cake"
+      ]
+    }
+  }
+}
+
+#Lecture 86 Select by id
+
+GET /products/_search
+{
+  "query": {
+    "ids": {
+      "values": [
+        "1",
+        "3"
+      ]
+    }
+  }
+}
+
+#Lecture 87 values around range
+
+GET /products/_search
+{
+  "query": {
+    "range": {
+      "in_stock": {
+        "gte":5,
+        "lte": 30
+      }
+    }
+  }
+}
+
+GET /products/_search
+{
+  "query": {
+    "range": {
+      "created": {
+        "gte":"01-01-2010",
+        "lte": "31-12-2010",
+        "format": "dd-MM-yyyy"
+      }
+    }
+  }
+}
+
+GET /products/_search
+{
+  "query": {
+    "range": {
+      "created": {
+        "gte":"2010/01/01||/d-1y-1d/M",
+        "lte":"now"
+      }
+    }
+  }
+}
+
+#Lecture 89 Empty array
+
+GET /products/_search
+{
+  "query": {
+    "exists": {
+      "field": "tags"
+    }
+  }
+}
+
+GET /products/_search
+{
+  "query": {
+    "prefix": {
+      "tags.keyword": "Vege"
+    }
+  }
+}
+
+GET /products/_search
+{
+  "query": {
+    "wildcard": {
+      "tags.keyword": "Vege*tabl?"
+    }
+  }
+}
+
+#Wildcard can be slow, Especially if you place it in the beginning
+
+
+GET /products/_search
+{
+  "query": {
+    "regexp": {
+      "tags.keyword": "Veget[a-z]+ble"
+    }
+  }
+}
+#Elasticsearch uses Lucene regexp, which has some things that are not included. There is no anchor for example
+
+# Full text improt 
+
+# bulk import of a json file
+# curl -H "Contenct-Type: application/x-ndjson" -XPOST http://localhost:9200/recipe/_bulk --data-binary "@test-data.json"
+
+PUT /recipe
+
+PUT /test_data
+
+GET /recipe/_mapping
+
+#exact match
+GET /recipe/_search
+{
+  "query": {
+    "match_phrase": {
+      "title": "spaghetti puttanesca"
+    }
+  }
+}
+
+GET /recipe/_search
+{
+  "query": {
+    "multi_match": {
+      "query": "pasta",
+      "fields": ["title","description"]
+    }
+  }
+}
+
+#should is used for relevance score boosting
+
+GET /recipe/_search
+{
+  "query": {
+    "bool": {
+      "must": [
+        {"match": 
+          {
+          "ingredients.name": "parmesan"
+          }
+        }],
+      "must_not": [
+        {"match": {
+          "ingredients.name": "tuna"
+        }}
+      ], 
+      "should": [
+        {"match": {
+          "ingredients.name": "parsley"
+        }}
+      ], 
+      "filter": [
+        {"range": {
+          "preparation_time_minutes": {
+            "lte": 15
+          }
+        }}
+      ]
+    }
+  }
+}
+
+#lecture 99
+
+GET /recipe/_search
+{
+  "query": {
+    "bool": {
+      "must": [
+        {"match": 
+          {
+          "ingredients.name": {
+            "query": "parmesan",   
+            "_name": "parmesan_must"
+            }
+          }
+        }],
+      "must_not": [
+        {"match": {
+          "ingredients.name": {
+            "query": "tuna",
+            "_name": "tuna_must_not"
+          }
+        }}
+      ], 
+      "should": [
+        {"match": {
+          "ingredients.name": {
+            "query": "parsley", 
+            "_name": "parsley_should"
+          }
+            
+          }}
+      ], 
+      "filter": [
+        {"range": {
+          "preparation_time_minutes": {
+            "lte": 15,
+            "_name": "prep_filter"
+          }
+        }}
+      ]
+    }
+  }
+}
+
+#Lecture 100
+
+GET /recipe/_search
+{
+  "query": {
+    "match": {
+      "title": "pasta carbonara"
+    }
+  }
+}
+
+GET /recipe/_search
+{
+  "query": {
+    "bool": {
+      "must": [
+        {"term": 
+          { "title": 
+            {"value": "pasta",
+            "_name": "pasta_should"
+            }
+          }
+        },
+        {
+          "term": {
+            "title": {
+              "value": "carbonara",
+            "_name": "carbonara_should"
+            }
+          }
+        }
+      ]
+    }
+  }
+}
+
+
+#Joins
+#Lecture 102
+
+PUT /department
+{
+  "mappings": {
+      "properties": {
+        "name":{
+          "type": "text"
+        },
+        "employees": {
+          "type": "nested"
+        }
+      }
+  }
+}
+
+POST /department/_doc/1
+{
+  "name": "Data Science",
+  "employees": [
+    {
+      "name": "Petko",
+      "position": "Senior Data Scientis",
+      "company" : "Slice",
+      "hight": 190
+    },
+    {
+      "name": "Filip",
+      "position": "Senior Data Scientis",
+      "company" : "Scalefocus",
+      "hight": 185
+    },
+    {
+      "name": "Nikola",
+      "position": "Senior Data Scientis",
+      "company" : "ALlocate",
+      "hight": 182
+    }
+  ]
+}
+
+#This doesn't work for nested object
+GET /department/_search
+{
+  "query": {
+    "bool": {
+      "must": [
+        {"range": 
+          {
+          "employees.hight": 
+            { "gte": 185
+            }
+          }
+        }
+      ]
+    }
+  }
+}
+
+#This is the way to go with nested objects
+GET /department/_search
+{
+  "_source": false, 
+  "query": {
+    "nested": {
+      "path": "employees",
+      "inner_hits": {}, 
+      "query": {"bool": {
+      "must": [
+        {"range": 
+          {
+          "employees.hight": 
+            { "gte": 185
+            }
+          }
+        }
+      ]
+    }}
+    }
+  }
+}
+
+DELETE /department
+
+PUT /department
+{
+  "mappings": {
+    "properties": {
+      "join_fields":{
+        "type": "join",
+        "relations": {
+          "department": "employee"
+        }
+      }
+    }
+  }
+}
+
+
+PUT /department/_doc/1
+{
+  "name": "Sales",
+  "join_fields": "department"
+}
+
+PUT /department/_doc/2
+{
+  "name": "Marketing",
+  "join_fields": "department"
+}
+
+GET /department/_search
+
+
+PUT /department/_doc/3?routing=1
+{
+  "name": "Altay Said",
+  "age": 29,
+  "gender": "M",
+  "join_fields": {
+    "name": "employee",
+    "parent": 1
+  }
+}
+
+GET /department/_search
+
+PUT /department/_doc/4?routing=2
+{
+  "name": "Igor Ginoski",
+  "age": 29,
+  "gender": "M",
+  "join_fields": {
+    "name": "employee",
+    "parent": 2
+  }
+}
+
+PUT /department/_doc/5?routing=3
+{
+  "name": "Krusa",
+  "age": 29,
+  "gender": "M",
+  "join_fields": {
+    "name": "employee",
+    "parent": 3
+  }
+}
+
+
+GET /department/_search
+{
+  "query": {
+    "parent_id": {
+      "type": "employee",
+      "id":2
+    }
+  }
+}
+  
+
+#Lecture 107
+
+GET /department/_search
+{
+  "query": {
+    "has_parent": {
+      "parent_type": "department",
+      "score": true,
+      "query": {
+        "term": {
+          "name.keyword": "Marketing"
+        }
+      }
+    }
+  }
+}
+
+GET /department/_search
+{
+  "query": {
+    "has_child": {
+      "type": "employee",
+      "score_mode": "max",
+      "min_children": 1,
+      "max_children": 2, 
+      "query": {
+        "bool": {
+          "must": [
+            {"range": {
+              "age": {
+                "gte": 29
+              }
+            }}
+          ],
+          "should": [
+            {"term": {
+              "gender.keyword": "M"
+            }}
+          ]
+        }
+      }
+    }
+  }
+}
+
+# Multiple relations
+
+PUT /company
+{
+  "mappings": {
+    "properties": { 
+      "join_field":{
+        "type": "join",
+        "relations":{
+         "company": ["department","supplier"],
+         "department": "employee"
+        }
+      }
+    }
+  }
+}
+
+PUT /company/_doc/1
+{
+  "name": "AltAI Inc",
+  "join_field": "company"
+}
+
+PUT /company/_doc/2?routing=1
+{
+  "name": "Musala",
+  "join_field": {
+    "name": "department",
+    "parent":1
+  }
+}
+
+PUT /company/_doc/3?routing=1
+{
+  "name": "Altay",
+  "join_field": {
+    "name": "employee",
+    "parent":2
+  }
+}
+
+
+
+GET /recipe/_search
+{
+  "_source": ["title","ingredients.*"], 
+  "query": {
+    "match": {
+      "title": "pasta"
+    }
+  }
+}
+
+GET /recipe/_search?size=2
+{
+  "_source": {
+    "includes": "ingredients.*",
+    "excludes": "ingredients.name"
+  }, 
+  "query": {
+    "match": {
+      "title": "pasta"
+    }
+  }
+}
+
+# default size is 10
+# from acts as an offset
+# pagination = Total_pages = ceil(total_hits/page_size)
+
+# Sort ; default is asc 
+GET /recipe/_search
+{
+  "size": 12, 
+  "from": 1,
+  "_source": {
+    "includes": ["created","preparation_time_minutes"]
+  }, 
+  "query": {
+    "match": {
+      "title": "pasta"
+    }
+  },
+  "sort": [
+    {
+      "preparation_time_minutes": {
+        "order": "asc",
+        "mode": "avg"
+        
+      },
+      "created": "desc"
+    }
+  ]
+}
+
+GET /recipe/_search
+{
+  "query": {
+    "bool": {
+      "must": [
+        {
+          "match": {
+            "title": "pasta"
+          }
+        }
+      ],
+      "filter": [
+        {
+          "range": {
+            "preparation_time_minutes": {
+              "lte": 15
+            }
+          }
+        }
+      ]
+    }
+  }
+}
+
+
+GET /recipe/_mapping
+
+GET /recipe/_search
+{
+  "size": 0
+  , "aggs": {
+    "total_time": {
+      "sum": {
+        "field": "preparation_time_minutes"
+      }
+    },
+    "avg_time":
+    {
+      "avg": {
+        "field": "preparation_time_minutes"
+      }
+    },
+    "min_time":
+    {
+      "min": {
+        "field": "preparation_time_minutes"
+      }
+    },
+    "max_time":
+    {
+      "max": {
+        "field": "preparation_time_minutes"
+      }
+    }
+  }
+}
+
+#cardinality can be used as count_distinct, but this is not very accurate and elasticsearch has some kind of engine to produce it
+
+GET /recipe/_search
+{
+  "size": 0,
+  "aggs": {
+    "total_titels":{
+      "value_count": {
+        "field": "title.keyword"
+      }
+    }
+  }
+}
+
+GET /recipe/_search
+{
+  "size": 0,
+  "aggs": {
+    "time_stats":{
+      "stats": {
+        "field": "preparation_time_minutes"
+      }
+    }
+  }
+}  
+  
+  
+#term can be used for creating buckets
+
+GET /recipe/_search
+{
+  "size": 0,
+  "aggs": {
+    "time_bucket":{
+      "terms": {
+        "field": "preparation_time_minutes",
+        "missing": "0",
+        "min_doc_count": 2,
+        "order": {
+          "_term": "asc"
+        }
+      },
+      "aggs": {
+        "total_time_preparation": {
+          "stats": {
+            "field": "preparation_time_minutes"
+          }
+        }
+      }
+    }
+  }
+}
+
+
+GET /recipe/_search
+{
+  "size": 0,
+  "aggs": {
+    "quick_recipe":{
+      "filter": {
+        "range": {
+          "preparation_time_minutes": {
+            "lt": 25
+          }
+        }
+      },
+      "aggs": {
+        "avg_time": {
+          "avg": {
+            "field": "preparation_time_minutes"
+          }
+        }
+      }
+    }
+  }
+}
+
+
+GET /recipe/_search
+{
+  "size": 0,
+  "aggs": {
+    "my_filter":{
+      "filters": {
+        "filters": {
+          "pasta": {
+            "match": {
+              "title": "pasta"
+            }
+          },
+          "spaghetti":{
+            "match":{
+              "title": "spaghetti"
+            }
+          }
+        }
+      },
+      "aggs": {
+        "rating": {
+          "avg": {
+            "field": "ratings"
+          }
+        }
+      }
+    }
+  }
+}
+
+GET recipe/_search
+{
+  "size": 0,
+  "aggs": {
+    "time_bucket": {
+      "terms": {
+        "field": "created"      }
+    }
+  }
+}
+
+GET recipe/_search
+{
+  "size": 0,
+  "aggs": {
+    "created_at_range": {
+      "date_range": {
+        "field": "created",
+        "keyed": true, 
+        "ranges": [
+          {
+            "to": "2003/01/01",
+            "key": "before 2003"
+          },
+          {
+            "from": "2003/01/01",
+            "to": "2003/01/01||+2y",
+            "key": "middle ages"
+          },
+          {
+            "from": "2003/01/01||+2y",
+            "to": "2003/01/01||+10y",
+            "key": "late ages"
+          }
+        ]
+      },
+      "aggs": {
+        "average_time": {
+          "avg": {
+            "field": "preparation_time_minutes"
+          }
+        }
+      }
+    }
+  }
+}
+
+GET recipe/_search
+{
+  "size": 0,
+  "aggs": {
+    "amount_distribution": {
+      "histogram": {
+        "field": "preparation_time_minutes",
+        "interval": 15,
+        "min_doc_count": 4,
+        "extended_bounds": {
+          "min": 20,
+          "max": 28
+        }
+      },
+      "aggs": {
+        "sum_of_time": {
+          "sum": {
+            "field": "preparation_time_minutes"
+          }
+        }
+      }
+    }
+  }
+}
+
+GET recipe/_search
+{
+  "size": 0,
+  "aggs": {
+    "amount_distribution": {
+      "date_histogram": {
+        "field": "created",
+        "interval": "year"
+      },
+      "aggs": {
+        "sum_of_time": {
+          "sum": {
+            "field": "preparation_time_minutes"
+          }
+        }
+      }
+    }
+  }
+}
+
+
+GET recipe/_search
+{
+  "query": {
+    "range": {
+      "preparation_time_minutes": {
+        "gte": 26
+      }
+    }
+  },
+  "size": 0,
+  "aggs": {
+    "recipe_stats_local":{
+      "stats": {
+        "field": "preparation_time_minutes"
+      }
+    },
+    "recipe_stats": {
+      "global": {},
+      "aggs": {
+        "recipe_stats_global": {
+          "stats": {
+            "field": "preparation_time_minutes"
+          }
+        }
+      }
+    }
+  }
+}
+
+
+
+POST /orders/default/1
+{
+  "total_amount":100
+}
+
+POST /orders/default/2
+{
+  "total_amount":100,
+  "status": null
+}
+
+GET /orders/_search
+{
+ "size": 0,
+ "aggs": {
+   "orders_without_status": {
+     "missing": {
+       "field": "status"
+     }
+   }
+ }
+}
+
+
+
+
+
+
